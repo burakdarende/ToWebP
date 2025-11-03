@@ -18,7 +18,10 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("800x600")
+        self.window.geometry("850x700")
+        
+        # Make window non-resizable
+        self.window.resizable(False, False)
         
         # Set theme
         ctk.set_appearance_mode("dark")
@@ -37,68 +40,68 @@ class WebPConverterGUI:
         """Setup the user interface"""
         # Main container
         main_frame = ctk.CTkFrame(self.window)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True, padx=15, pady=15)
         
         # Title
         title_label = ctk.CTkLabel(
             main_frame,
             text="🖼️ Image to WebP Converter",
-            font=ctk.CTkFont(size=28, weight="bold")
+            font=ctk.CTkFont(size=24, weight="bold")
         )
-        title_label.pack(pady=(0, 20))
+        title_label.pack(pady=(0, 15))
         
         # Source folder selection
         folder_frame = ctk.CTkFrame(main_frame)
-        folder_frame.pack(fill="x", pady=(0, 20))
+        folder_frame.pack(fill="x", pady=(0, 12))
         
         folder_label = ctk.CTkLabel(
             folder_frame,
             text="Select Source Folder:",
-            font=ctk.CTkFont(size=14)
+            font=ctk.CTkFont(size=13)
         )
-        folder_label.pack(anchor="w", padx=10, pady=(10, 5))
+        folder_label.pack(anchor="w", padx=10, pady=(8, 4))
         
         folder_select_frame = ctk.CTkFrame(folder_frame, fg_color="transparent")
-        folder_select_frame.pack(fill="x", padx=10, pady=(0, 10))
+        folder_select_frame.pack(fill="x", padx=10, pady=(0, 8))
         
         self.folder_entry = ctk.CTkEntry(
             folder_select_frame,
             textvariable=self.source_folder,
             placeholder_text="Choose a folder containing images...",
-            height=40,
-            font=ctk.CTkFont(size=12)
+            height=35,
+            font=ctk.CTkFont(size=11)
         )
-        self.folder_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        self.folder_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
         
         browse_btn = ctk.CTkButton(
             folder_select_frame,
             text="Browse",
             command=self._browse_folder,
-            width=100,
-            height=40,
+            width=90,
+            height=35,
             font=ctk.CTkFont(size=12, weight="bold")
         )
         browse_btn.pack(side="right")
         
         # Settings frame
         settings_frame = ctk.CTkFrame(main_frame)
-        settings_frame.pack(fill="x", pady=(0, 20))
+        settings_frame.pack(fill="x", pady=(0, 12))
         
         settings_label = ctk.CTkLabel(
             settings_frame,
             text="Conversion Settings:",
-            font=ctk.CTkFont(size=14)
+            font=ctk.CTkFont(size=13)
         )
-        settings_label.pack(anchor="w", padx=10, pady=(10, 10))
+        settings_label.pack(anchor="w", padx=10, pady=(8, 8))
         
         # Quality slider
         quality_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
-        quality_frame.pack(fill="x", padx=10, pady=5)
+        quality_frame.pack(fill="x", padx=10, pady=4)
         
         quality_label = ctk.CTkLabel(
             quality_frame,
             text=f"Quality: {self.quality_var.get()}",
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=11)
         )
         quality_label.pack(anchor="w")
         
@@ -109,26 +112,26 @@ class WebPConverterGUI:
             variable=self.quality_var,
             command=lambda v: quality_label.configure(text=f"Quality: {int(v)}")
         )
-        self.quality_slider.pack(fill="x", pady=(5, 0))
+        self.quality_slider.pack(fill="x", pady=(4, 0))
         
         # Lossless checkbox
         lossless_check = ctk.CTkCheckBox(
             settings_frame,
             text="Lossless Compression (Larger file size, perfect quality)",
             variable=self.lossless_var,
-            font=ctk.CTkFont(size=12),
+            font=ctk.CTkFont(size=11),
             command=self._toggle_quality
         )
-        lossless_check.pack(anchor="w", padx=10, pady=10)
+        lossless_check.pack(anchor="w", padx=10, pady=8)
         
         # Method slider
         method_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
-        method_frame.pack(fill="x", padx=10, pady=(5, 10))
+        method_frame.pack(fill="x", padx=10, pady=(4, 8))
         
         method_label = ctk.CTkLabel(
             method_frame,
             text=f"Compression Level: {self.method_var.get()} (Higher = Better compression, slower)",
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=11)
         )
         method_label.pack(anchor="w")
         
@@ -142,45 +145,45 @@ class WebPConverterGUI:
                 text=f"Compression Level: {int(v)} (Higher = Better compression, slower)"
             )
         )
-        method_slider.pack(fill="x", pady=(5, 0))
+        method_slider.pack(fill="x", pady=(4, 0))
         
         # Progress section
         self.progress_frame = ctk.CTkFrame(main_frame)
-        self.progress_frame.pack(fill="both", expand=True, pady=(0, 20))
+        self.progress_frame.pack(fill="both", expand=True, pady=(0, 12))
         
         progress_label = ctk.CTkLabel(
             self.progress_frame,
             text="Progress:",
-            font=ctk.CTkFont(size=14)
+            font=ctk.CTkFont(size=13)
         )
-        progress_label.pack(anchor="w", padx=10, pady=(10, 5))
+        progress_label.pack(anchor="w", padx=10, pady=(8, 4))
         
         self.progress_bar = ctk.CTkProgressBar(self.progress_frame)
-        self.progress_bar.pack(fill="x", padx=10, pady=(0, 10))
+        self.progress_bar.pack(fill="x", padx=10, pady=(0, 8))
         self.progress_bar.set(0)
         
         self.status_label = ctk.CTkLabel(
             self.progress_frame,
             text="Ready to convert",
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=11)
         )
-        self.status_label.pack(anchor="w", padx=10, pady=(0, 5))
+        self.status_label.pack(anchor="w", padx=10, pady=(0, 4))
         
         # Log text area
         self.log_text = ctk.CTkTextbox(
             self.progress_frame,
-            height=150,
-            font=ctk.CTkFont(size=11, family="Consolas")
+            height=120,
+            font=ctk.CTkFont(size=10, family="Consolas")
         )
-        self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 8))
         
         # Convert button
         self.convert_btn = ctk.CTkButton(
             main_frame,
             text="🚀 Start Conversion",
             command=self._start_conversion,
-            height=50,
-            font=ctk.CTkFont(size=16, weight="bold"),
+            height=45,
+            font=ctk.CTkFont(size=15, weight="bold"),
             fg_color="#2ecc71",
             hover_color="#27ae60"
         )
@@ -190,10 +193,10 @@ class WebPConverterGUI:
         info_label = ctk.CTkLabel(
             main_frame,
             text="Output folder will be created as: [source_folder]_WebP",
-            font=ctk.CTkFont(size=10),
+            font=ctk.CTkFont(size=9),
             text_color="gray"
         )
-        info_label.pack(pady=(10, 0))
+        info_label.pack(pady=(8, 0))
         
     def _toggle_quality(self):
         """Toggle quality slider based on lossless setting"""
