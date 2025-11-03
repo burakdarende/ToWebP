@@ -15,7 +15,7 @@ class ImageToWebPConverter:
     # Supported image formats
     SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif'}
     
-    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6):
+    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6, target_width: int = None):
         """
         Initialize converter with settings
         
@@ -23,10 +23,12 @@ class ImageToWebPConverter:
             quality: Quality setting (0-100) for lossy compression
             lossless: Use lossless compression
             method: Compression method (0-6, higher = better compression but slower)
+            target_width: Target width for resizing (height will be calculated proportionally)
         """
         self.quality = quality
         self.lossless = lossless
         self.method = method
+        self.target_width = target_width
         self.total_files = 0
         self.processed_files = 0
         self.errors = []
@@ -168,6 +170,15 @@ class ImageToWebPConverter:
         try:
             # Open and convert image
             with Image.open(image_path) as img:
+                # Resize if target width is specified
+                if self.target_width and self.target_width > 0:
+                    original_width, original_height = img.size
+                    if original_width != self.target_width:
+                        # Calculate proportional height
+                        aspect_ratio = original_height / original_width
+                        new_height = int(self.target_width * aspect_ratio)
+                        img = img.resize((self.target_width, new_height), Image.Resampling.LANCZOS)
+                
                 # Convert RGBA to RGB if necessary for lossy compression
                 if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
                     # Keep alpha channel for lossless
@@ -196,8 +207,9 @@ class ImageToWebPConverter:
             self.processed_files += 1
             
             if progress_callback:
+                resize_info = f" (resized to {self.target_width}px width)" if self.target_width else ""
                 progress_callback(
-                    f"Converted: {image_path.name}", 
+                    f"Converted: {image_path.name}{resize_info}", 
                     self.processed_files, 
                     self.total_files
                 )

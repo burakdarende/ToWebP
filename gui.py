@@ -18,7 +18,7 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("850x820")  # Yükseklik artırıldı
+        self.window.geometry("850x860")
         self.window.resizable(False, False)
         
         # Set theme
@@ -31,6 +31,8 @@ class WebPConverterGUI:
         self.quality_var = ctk.IntVar(value=85)
         self.lossless_var = ctk.BooleanVar(value=False)
         self.method_var = ctk.IntVar(value=4)
+        self.resize_enabled = ctk.BooleanVar(value=False)
+        self.resize_width = ctk.StringVar(value="")
         self.is_converting = False
         
         self._setup_ui()
@@ -188,6 +190,48 @@ class WebPConverterGUI:
         )
         method_slider.pack(fill="x", pady=(4, 0))
         
+        # Resize option
+        resize_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        resize_frame.pack(fill="x", padx=10, pady=(8, 8))
+        
+        resize_check = ctk.CTkCheckBox(
+            resize_frame,
+            text="Resize Images (Proportional)",
+            variable=self.resize_enabled,
+            font=ctk.CTkFont(size=11),
+            command=self._toggle_resize
+        )
+        resize_check.pack(anchor="w")
+        
+        resize_input_frame = ctk.CTkFrame(resize_frame, fg_color="transparent")
+        resize_input_frame.pack(fill="x", pady=(4, 0))
+        
+        resize_width_label = ctk.CTkLabel(
+            resize_input_frame,
+            text="Target Width (px):",
+            font=ctk.CTkFont(size=11)
+        )
+        resize_width_label.pack(side="left", padx=(0, 8))
+        
+        self.resize_entry = ctk.CTkEntry(
+            resize_input_frame,
+            textvariable=self.resize_width,
+            placeholder_text="e.g., 1920, 1200, 800...",
+            width=200,
+            height=30,
+            font=ctk.CTkFont(size=11),
+            state="disabled"
+        )
+        self.resize_entry.pack(side="left")
+        
+        resize_info_label = ctk.CTkLabel(
+            resize_input_frame,
+            text="(Height will be auto-calculated)",
+            font=ctk.CTkFont(size=9),
+            text_color="gray"
+        )
+        resize_info_label.pack(side="left", padx=(8, 0))
+        
         # Progress section
         self.progress_frame = ctk.CTkFrame(main_frame)
         self.progress_frame.pack(fill="both", expand=True, pady=(0, 12))
@@ -241,10 +285,18 @@ class WebPConverterGUI:
         info_label.pack(pady=(12, 0))
         
     def _toggle_quality(self):
+        """Toggle quality slider based on lossless setting"""
         if self.lossless_var.get():
             self.quality_slider.configure(state="disabled")
         else:
             self.quality_slider.configure(state="normal")
+    
+    def _toggle_resize(self):
+        """Toggle resize input based on checkbox"""
+        if self.resize_enabled.get():
+            self.resize_entry.configure(state="normal")
+        else:
+            self.resize_entry.configure(state="disabled")
     
     def _browse_folder(self):
         folder = filedialog.askdirectory(title="Select Folder with Images")
@@ -277,6 +329,7 @@ class WebPConverterGUI:
         self._log(message)
     
     def _start_conversion(self):
+        """Start the conversion process"""
         if self.is_converting:
             messagebox.showwarning("Warning", "Conversion is already in progress!")
             return
@@ -299,6 +352,22 @@ class WebPConverterGUI:
             messagebox.showerror("Error", "Selected path does not exist!")
             return
         
+        # Validate resize settings
+        target_width = None
+        if self.resize_enabled.get():
+            resize_value = self.resize_width.get().strip()
+            if not resize_value:
+                messagebox.showerror("Error", "Please enter a target width for resize!")
+                return
+            try:
+                target_width = int(resize_value)
+                if target_width <= 0:
+                    messagebox.showerror("Error", "Target width must be a positive number!")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Target width must be a valid number!")
+                return
+        
         self.log_text.delete("1.0", "end")
         self._log("=" * 60)
         self._log("Starting conversion process...")
@@ -306,21 +375,27 @@ class WebPConverterGUI:
         self._log(f"Quality: {self.quality_var.get()}")
         self._log(f"Lossless: {self.lossless_var.get()}")
         self._log(f"Compression level: {self.method_var.get()}")
+        if target_width:
+            self._log(f"Resize: Enabled (Target width: {target_width}px, height will be proportional)")
+        else:
+            self._log("Resize: Disabled")
         self._log("=" * 60)
         
         self.is_converting = True
         self.convert_btn.configure(state="disabled", text="Converting...")
         
-        thread = threading.Thread(target=self._convert_thread, args=(source, is_single_file))
+        thread = threading.Thread(target=self._convert_thread, args=(source, is_single_file, target_width))
         thread.daemon = True
         thread.start()
     
-    def _convert_thread(self, source: str, is_single_file: bool = False):
+    def _convert_thread(self, source: str, is_single_file: bool = False, target_width: int = None):
+        """Conversion thread"""
         try:
             converter = ImageToWebPConverter(
                 quality=self.quality_var.get(),
                 lossless=self.lossless_var.get(),
-                method=self.method_var.get()
+                method=self.method_var.get(),
+                target_width=target_width
             )
             
             if is_single_file:
