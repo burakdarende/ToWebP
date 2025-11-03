@@ -18,9 +18,7 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("850x700")
-        
-        # Make window non-resizable
+        self.window.geometry("850x820")  # Yükseklik artırıldı
         self.window.resizable(False, False)
         
         # Set theme
@@ -29,6 +27,7 @@ class WebPConverterGUI:
         
         # Variables
         self.source_folder = ctk.StringVar()
+        self.source_file = ctk.StringVar()
         self.quality_var = ctk.IntVar(value=85)
         self.lossless_var = ctk.BooleanVar(value=False)
         self.method_var = ctk.IntVar(value=4)
@@ -52,7 +51,7 @@ class WebPConverterGUI:
         
         # Source folder selection
         folder_frame = ctk.CTkFrame(main_frame)
-        folder_frame.pack(fill="x", pady=(0, 12))
+        folder_frame.pack(fill="x", pady=(0, 8))
         
         folder_label = ctk.CTkLabel(
             folder_frame,
@@ -73,7 +72,7 @@ class WebPConverterGUI:
         )
         self.folder_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
         
-        browse_btn = ctk.CTkButton(
+        browse_folder_btn = ctk.CTkButton(
             folder_select_frame,
             text="Browse",
             command=self._browse_folder,
@@ -81,7 +80,49 @@ class WebPConverterGUI:
             height=35,
             font=ctk.CTkFont(size=12, weight="bold")
         )
-        browse_btn.pack(side="right")
+        browse_folder_btn.pack(side="right")
+        
+        # OR separator
+        or_label = ctk.CTkLabel(
+            main_frame,
+            text="- OR -",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray"
+        )
+        or_label.pack(pady=4)
+        
+        # Single file selection
+        file_frame = ctk.CTkFrame(main_frame)
+        file_frame.pack(fill="x", pady=(0, 12))
+        
+        file_label = ctk.CTkLabel(
+            file_frame,
+            text="Select Single File:",
+            font=ctk.CTkFont(size=13)
+        )
+        file_label.pack(anchor="w", padx=10, pady=(8, 4))
+        
+        file_select_frame = ctk.CTkFrame(file_frame, fg_color="transparent")
+        file_select_frame.pack(fill="x", padx=10, pady=(0, 8))
+        
+        self.file_entry = ctk.CTkEntry(
+            file_select_frame,
+            textvariable=self.source_file,
+            placeholder_text="Choose a single image file...",
+            height=35,
+            font=ctk.CTkFont(size=11)
+        )
+        self.file_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        
+        browse_file_btn = ctk.CTkButton(
+            file_select_frame,
+            text="Browse",
+            command=self._browse_file,
+            width=90,
+            height=35,
+            font=ctk.CTkFont(size=12, weight="bold")
+        )
+        browse_file_btn.pack(side="right")
         
         # Settings frame
         settings_frame = ctk.CTkFrame(main_frame)
@@ -172,53 +213,63 @@ class WebPConverterGUI:
         # Log text area
         self.log_text = ctk.CTkTextbox(
             self.progress_frame,
-            height=120,
+            height=110,
             font=ctk.CTkFont(size=10, family="Consolas")
         )
         self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 8))
         
-        # Convert button
+        # Convert button (BÜYÜTÜLMÜŞ)
         self.convert_btn = ctk.CTkButton(
             main_frame,
             text="🚀 Start Conversion",
             command=self._start_conversion,
-            height=45,
-            font=ctk.CTkFont(size=15, weight="bold"),
+            height=85,  # büyütüldü
+            font=ctk.CTkFont(size=22, weight="bold"),
             fg_color="#2ecc71",
-            hover_color="#27ae60"
+            hover_color="#27ae60",
+            corner_radius=12
         )
-        self.convert_btn.pack(fill="x")
+        self.convert_btn.pack(fill="x", pady=(12, 10))
         
         # Info label
         info_label = ctk.CTkLabel(
             main_frame,
-            text="Output folder will be created as: [source_folder]_WebP",
+            text="Output: Folder → [folder]_WebP  |  File → same location with .webp extension",
             font=ctk.CTkFont(size=9),
             text_color="gray"
         )
-        info_label.pack(pady=(8, 0))
+        info_label.pack(pady=(12, 0))
         
     def _toggle_quality(self):
-        """Toggle quality slider based on lossless setting"""
         if self.lossless_var.get():
             self.quality_slider.configure(state="disabled")
         else:
             self.quality_slider.configure(state="normal")
     
     def _browse_folder(self):
-        """Open folder browser dialog"""
         folder = filedialog.askdirectory(title="Select Folder with Images")
         if folder:
             self.source_folder.set(folder)
+            self.source_file.set("")
+    
+    def _browse_file(self):
+        file = filedialog.askopenfilename(
+            title="Select Image File",
+            filetypes=[
+                ("Image files", "*.jpg *.jpeg *.png *.bmp *.tiff *.tif *.gif *.webp"),
+                ("All files", "*.*")
+            ]
+        )
+        if file:
+            self.source_file.set(file)
+            self.source_folder.set("")
     
     def _log(self, message: str):
-        """Add message to log"""
         self.log_text.insert("end", f"{message}\n")
         self.log_text.see("end")
         self.window.update_idletasks()
     
     def _update_progress(self, message: str, current: int, total: int):
-        """Update progress bar and status"""
         if total > 0:
             progress = current / total
             self.progress_bar.set(progress)
@@ -226,60 +277,70 @@ class WebPConverterGUI:
         self._log(message)
     
     def _start_conversion(self):
-        """Start the conversion process"""
         if self.is_converting:
             messagebox.showwarning("Warning", "Conversion is already in progress!")
             return
         
-        source = self.source_folder.get().strip()
-        if not source:
-            messagebox.showerror("Error", "Please select a source folder!")
+        source_folder = self.source_folder.get().strip()
+        source_file = self.source_file.get().strip()
+        
+        if not source_folder and not source_file:
+            messagebox.showerror("Error", "Please select a source folder or file!")
             return
+        
+        if source_file:
+            source = source_file
+            is_single_file = True
+        else:
+            source = source_folder
+            is_single_file = False
         
         if not os.path.exists(source):
-            messagebox.showerror("Error", "Selected folder does not exist!")
+            messagebox.showerror("Error", "Selected path does not exist!")
             return
         
-        # Clear log
         self.log_text.delete("1.0", "end")
         self._log("=" * 60)
         self._log("Starting conversion process...")
-        self._log(f"Source folder: {source}")
+        self._log(f"Source: {source}")
         self._log(f"Quality: {self.quality_var.get()}")
         self._log(f"Lossless: {self.lossless_var.get()}")
         self._log(f"Compression level: {self.method_var.get()}")
         self._log("=" * 60)
         
-        # Disable convert button
         self.is_converting = True
         self.convert_btn.configure(state="disabled", text="Converting...")
         
-        # Run conversion in separate thread
-        thread = threading.Thread(target=self._convert_thread, args=(source,))
+        thread = threading.Thread(target=self._convert_thread, args=(source, is_single_file))
         thread.daemon = True
         thread.start()
     
-    def _convert_thread(self, source: str):
-        """Conversion thread"""
+    def _convert_thread(self, source: str, is_single_file: bool = False):
         try:
-            # Create converter
             converter = ImageToWebPConverter(
                 quality=self.quality_var.get(),
                 lossless=self.lossless_var.get(),
                 method=self.method_var.get()
             )
             
-            # Convert
-            output_folder, total, processed, errors = converter.convert_folder(
-                source,
-                progress_callback=self._update_progress
-            )
+            if is_single_file:
+                output_file, total, processed, errors = converter.convert_single_file(
+                    source,
+                    progress_callback=self._update_progress
+                )
+                output_info = output_file
+            else:
+                output_folder, total, processed, errors = converter.convert_folder(
+                    source,
+                    progress_callback=self._update_progress
+                )
+                output_info = output_folder
             
-            # Show results
             self._log("=" * 60)
             self._log(f"Conversion completed!")
-            self._log(f"Output folder: {output_folder}")
-            self._log(f"Total images found: {total}")
+            self._log(f"Output: {output_info}")
+            if not is_single_file:
+                self._log(f"Total images found: {total}")
             self._log(f"Successfully converted: {processed}")
             if errors:
                 self._log(f"Errors: {len(errors)}")
@@ -287,20 +348,18 @@ class WebPConverterGUI:
                     self._log(f"  - {error}")
             self._log("=" * 60)
             
-            # Show success message
-            self.window.after(0, lambda: messagebox.showinfo(
-                "Success",
-                f"Conversion completed!\n\n"
-                f"Processed: {processed}/{total} files\n"
-                f"Output: {output_folder}"
-            ))
+            if is_single_file:
+                msg = f"Conversion completed!\n\nOutput: {output_info}"
+            else:
+                msg = f"Conversion completed!\n\nProcessed: {processed}/{total} files\nOutput: {output_info}"
+            
+            self.window.after(0, lambda: messagebox.showinfo("Success", msg))
             
         except Exception as e:
             self._log(f"ERROR: {str(e)}")
             self.window.after(0, lambda: messagebox.showerror("Error", str(e)))
         
         finally:
-            # Re-enable convert button
             self.is_converting = False
             self.window.after(0, lambda: self.convert_btn.configure(
                 state="normal",
@@ -308,12 +367,10 @@ class WebPConverterGUI:
             ))
     
     def run(self):
-        """Run the application"""
         self.window.mainloop()
 
 
 def main():
-    """Main entry point"""
     app = WebPConverterGUI()
     app.run()
 

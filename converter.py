@@ -70,6 +70,45 @@ class ImageToWebPConverter:
         
         return output_folder, self.total_files, self.processed_files, self.errors
     
+    def convert_single_file(
+        self,
+        source_file: str,
+        progress_callback: Optional[Callable[[str, int, int], None]] = None
+    ) -> tuple[str, int, int, list]:
+        """
+        Convert a single image file to WebP
+        
+        Args:
+            source_file: Path to source image file
+            progress_callback: Optional callback(message, current, total)
+            
+        Returns:
+            Tuple of (output_file, total_files=1, processed_files, errors)
+        """
+        source_path = Path(source_file)
+        if not source_path.exists():
+            raise ValueError(f"Source file does not exist: {source_file}")
+        
+        if not source_path.is_file():
+            raise ValueError(f"Source path is not a file: {source_file}")
+        
+        # Check if it's a supported format
+        if source_path.suffix.lower() not in self.SUPPORTED_FORMATS:
+            raise ValueError(f"Unsupported file format: {source_path.suffix}")
+        
+        # Reset counters
+        self.total_files = 1
+        self.processed_files = 0
+        self.errors = []
+        
+        # Create output file path in same directory with .webp extension
+        output_file = source_path.parent / f"{source_path.stem}.webp"
+        
+        # Convert the file
+        self._convert_image(source_path, source_path.parent, progress_callback)
+        
+        return str(output_file), self.total_files, self.processed_files, self.errors
+    
     def _count_images(self, directory: Path) -> None:
         """Count total number of images to process"""
         for item in directory.rglob('*'):
