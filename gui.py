@@ -18,7 +18,7 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("850x900")
+        self.window.geometry("850x1050")
         self.window.resizable(False, False)
         
         # Set theme
@@ -32,9 +32,26 @@ class WebPConverterGUI:
         self.lossless_var = ctk.BooleanVar(value=False)
         self.method_var = ctk.IntVar(value=4)
         self.preserve_alpha = ctk.BooleanVar(value=True)
+        self.create_bw = ctk.BooleanVar(value=False)
+        self.fine_tuning_enabled = ctk.BooleanVar(value=False)
         self.resize_enabled = ctk.BooleanVar(value=False)
         self.resize_width = ctk.StringVar(value="")
+        self.make_horizontal = ctk.BooleanVar(value=False)
         self.is_converting = False
+        self.stop_conversion = False
+        
+        # Fine-tuning values
+        self.auto_tone = ctk.BooleanVar(value=False)
+        self.exposure = ctk.DoubleVar(value=0.0)
+        self.contrast = ctk.DoubleVar(value=0.0)
+        self.highlights = ctk.DoubleVar(value=0.0)
+        self.shadows = ctk.DoubleVar(value=0.0)
+        self.whites = ctk.DoubleVar(value=0.0)
+        self.blacks = ctk.DoubleVar(value=0.0)
+        self.temperature = ctk.DoubleVar(value=0.0)
+        self.tint = ctk.DoubleVar(value=0.0)
+        self.vibrance = ctk.DoubleVar(value=0.0)
+        self.saturation = ctk.DoubleVar(value=0.0)
         
         self._setup_ui()
         
@@ -177,6 +194,15 @@ class WebPConverterGUI:
         )
         alpha_check.pack(anchor="w", padx=10, pady=8)
         
+        # Black & White checkbox
+        bw_check = ctk.CTkCheckBox(
+            settings_frame,
+            text="Create Black & White Version (Additional _bw file with same settings)",
+            variable=self.create_bw,
+            font=ctk.CTkFont(size=11)
+        )
+        bw_check.pack(anchor="w", padx=10, pady=8)
+        
         # Method slider
         method_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
         method_frame.pack(fill="x", padx=10, pady=(4, 8))
@@ -199,6 +225,33 @@ class WebPConverterGUI:
             )
         )
         method_slider.pack(fill="x", pady=(4, 0))
+        
+        # Fine-tuning option
+        fine_tune_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
+        fine_tune_frame.pack(fill="x", padx=10, pady=(8, 8))
+        
+        fine_tune_top_frame = ctk.CTkFrame(fine_tune_frame, fg_color="transparent")
+        fine_tune_top_frame.pack(fill="x")
+        
+        fine_tune_check = ctk.CTkCheckBox(
+            fine_tune_top_frame,
+            text="Fine-Tuning Adjustments (Exposure, Contrast, Colors...)",
+            variable=self.fine_tuning_enabled,
+            font=ctk.CTkFont(size=11),
+            command=self._toggle_fine_tuning
+        )
+        fine_tune_check.pack(side="left")
+        
+        self.fine_tune_btn = ctk.CTkButton(
+            fine_tune_top_frame,
+            text="⚙️ Adjust",
+            command=self._open_fine_tuning_dialog,
+            width=90,
+            height=28,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            state="disabled"
+        )
+        self.fine_tune_btn.pack(side="left", padx=(10, 0))
         
         # Resize option
         resize_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
@@ -242,6 +295,15 @@ class WebPConverterGUI:
         )
         resize_info_label.pack(side="left", padx=(8, 0))
         
+        # Make horizontal option (for vertical images)
+        horizontal_check = ctk.CTkCheckBox(
+            resize_frame,
+            text="📐 Make Vertical Images Horizontal (crop top/bottom to square based on target width)",
+            variable=self.make_horizontal,
+            font=ctk.CTkFont(size=11)
+        )
+        horizontal_check.pack(anchor="w", pady=(8, 0))
+        
         # Progress section
         self.progress_frame = ctk.CTkFrame(main_frame)
         self.progress_frame.pack(fill="both", expand=True, pady=(0, 12))
@@ -267,7 +329,7 @@ class WebPConverterGUI:
         # Log text area
         self.log_text = ctk.CTkTextbox(
             self.progress_frame,
-            height=110,
+            height=100,
             font=ctk.CTkFont(size=10, family="Consolas")
         )
         self.log_text.pack(fill="both", expand=True, padx=10, pady=(0, 8))
@@ -277,13 +339,13 @@ class WebPConverterGUI:
             main_frame,
             text="🚀 Start Conversion",
             command=self._start_conversion,
-            height=85,  # büyütüldü
-            font=ctk.CTkFont(size=22, weight="bold"),
+            height=95,  # daha da büyütüldü
+            font=ctk.CTkFont(size=24, weight="bold"),
             fg_color="#2ecc71",
             hover_color="#27ae60",
             corner_radius=12
         )
-        self.convert_btn.pack(fill="x", pady=(12, 10))
+        self.convert_btn.pack(fill="x", pady=(15, 12))
         
         # Info label
         info_label = ctk.CTkLabel(
@@ -307,6 +369,212 @@ class WebPConverterGUI:
             self.resize_entry.configure(state="normal")
         else:
             self.resize_entry.configure(state="disabled")
+    
+    def _toggle_fine_tuning(self):
+        """Toggle fine-tuning button based on checkbox"""
+        if self.fine_tuning_enabled.get():
+            self.fine_tune_btn.configure(state="normal")
+        else:
+            self.fine_tune_btn.configure(state="disabled")
+    
+    def _open_fine_tuning_dialog(self):
+        """Open fine-tuning adjustment dialog"""
+        dialog = ctk.CTkToplevel(self.window)
+        dialog.title("Fine-Tuning Adjustments")
+        dialog.geometry("500x650")
+        dialog.resizable(False, False)
+        
+        # Make it modal
+        dialog.transient(self.window)
+        dialog.grab_set()
+        
+        # Center the dialog
+        dialog.update_idletasks()
+        x = self.window.winfo_x() + (self.window.winfo_width() - 500) // 2
+        y = self.window.winfo_y() + (self.window.winfo_height() - 650) // 2
+        dialog.geometry(f"+{x}+{y}")
+        
+        # Main frame
+        main_frame = ctk.CTkFrame(dialog)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Title
+        title_label = ctk.CTkLabel(
+            main_frame,
+            text="⚙️ Fine-Tuning Adjustments",
+            font=ctk.CTkFont(size=20, weight="bold")
+        )
+        title_label.pack(pady=(0, 15))
+        
+        # Scrollable frame for sliders
+        scroll_frame = ctk.CTkScrollableFrame(main_frame, height=450)
+        scroll_frame.pack(fill="both", expand=True, pady=(0, 15))
+        
+        # Auto Tone checkbox at the top
+        auto_tone_frame = ctk.CTkFrame(scroll_frame, fg_color="#1a1a1a", corner_radius=8)
+        auto_tone_frame.pack(fill="x", pady=(5, 15), padx=5)
+        
+        auto_tone_check = ctk.CTkCheckBox(
+            auto_tone_frame,
+            text="🪄 Auto Tone (Automatic adjustments - disables manual sliders)",
+            variable=self.auto_tone,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            command=lambda: self._toggle_auto_tone(scroll_frame)
+        )
+        auto_tone_check.pack(anchor="w", padx=15, pady=12)
+        
+        auto_info = ctk.CTkLabel(
+            auto_tone_frame,
+            text="AI-powered automatic color correction, exposure, contrast and tone adjustments",
+            font=ctk.CTkFont(size=9),
+            text_color="gray"
+        )
+        auto_info.pack(anchor="w", padx=15, pady=(0, 10))
+        
+        # Store slider frames for toggling
+        self.slider_frames = []
+        
+        # Light section
+        light_label = ctk.CTkLabel(
+            scroll_frame,
+            text="▼ Light",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        light_label.pack(anchor="w", pady=(10, 10))
+        
+        # Exposure
+        self.slider_frames.append(self._create_slider(scroll_frame, "Exposure", self.exposure, -2.0, 2.0))
+        
+        # Contrast
+        self.slider_frames.append(self._create_slider(scroll_frame, "Contrast", self.contrast, -100, 100))
+        
+        # Highlights
+        self.slider_frames.append(self._create_slider(scroll_frame, "Highlights", self.highlights, -100, 100))
+        
+        # Shadows
+        self.slider_frames.append(self._create_slider(scroll_frame, "Shadows", self.shadows, -100, 100))
+        
+        # Whites
+        self.slider_frames.append(self._create_slider(scroll_frame, "Whites", self.whites, -100, 100))
+        
+        # Blacks
+        self.slider_frames.append(self._create_slider(scroll_frame, "Blacks", self.blacks, -100, 100))
+        
+        # Color section
+        color_label = ctk.CTkLabel(
+            scroll_frame,
+            text="▼ Color",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        color_label.pack(anchor="w", pady=(20, 10))
+        
+        # Temperature
+        self.slider_frames.append(self._create_slider(scroll_frame, "Temperature", self.temperature, -100, 100))
+        
+        # Tint
+        self.slider_frames.append(self._create_slider(scroll_frame, "Tint", self.tint, -100, 100))
+        
+        # Vibrance
+        self.slider_frames.append(self._create_slider(scroll_frame, "Vibrance", self.vibrance, -100, 100))
+        
+        # Saturation
+        self.slider_frames.append(self._create_slider(scroll_frame, "Saturation", self.saturation, -100, 100))
+        
+        # Apply initial state
+        self._toggle_auto_tone(scroll_frame)
+        
+        # Button frame
+        btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        btn_frame.pack(fill="x")
+        
+        # Reset button
+        reset_btn = ctk.CTkButton(
+            btn_frame,
+            text="Reset All",
+            command=self._reset_fine_tuning,
+            width=120,
+            height=35,
+            font=ctk.CTkFont(size=12)
+        )
+        reset_btn.pack(side="left", padx=(0, 10))
+        
+        # Close button
+        close_btn = ctk.CTkButton(
+            btn_frame,
+            text="Done",
+            command=dialog.destroy,
+            width=120,
+            height=35,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#2ecc71",
+            hover_color="#27ae60"
+        )
+        close_btn.pack(side="right")
+    
+    def _create_slider(self, parent, label_text, variable, min_val, max_val):
+        """Create a labeled slider"""
+        frame = ctk.CTkFrame(parent, fg_color="transparent")
+        frame.pack(fill="x", pady=5)
+        
+        # Label with value
+        value_text = f"{variable.get():.2f}" if isinstance(min_val, float) else f"{int(variable.get())}"
+        label = ctk.CTkLabel(
+            frame,
+            text=f"{label_text}: {value_text}",
+            font=ctk.CTkFont(size=11),
+            width=150,
+            anchor="w"
+        )
+        label.pack(side="left", padx=(0, 10))
+        
+        # Slider
+        slider = ctk.CTkSlider(
+            frame,
+            from_=min_val,
+            to=max_val,
+            variable=variable,
+            command=lambda v: label.configure(
+                text=f"{label_text}: {v:.2f}" if isinstance(min_val, float) else f"{label_text}: {int(v)}"
+            )
+        )
+        slider.pack(side="left", fill="x", expand=True)
+        
+        return frame
+    
+    def _reset_fine_tuning(self):
+        """Reset all fine-tuning values to defaults"""
+        self.auto_tone.set(False)
+        self.exposure.set(0.0)
+        self.contrast.set(0.0)
+        self.highlights.set(0.0)
+        self.shadows.set(0.0)
+        self.whites.set(0.0)
+        self.blacks.set(0.0)
+        self.temperature.set(0.0)
+        self.tint.set(0.0)
+        self.vibrance.set(0.0)
+        self.saturation.set(0.0)
+        
+        # Re-enable sliders if they exist
+        if hasattr(self, 'slider_frames'):
+            for frame in self.slider_frames:
+                for widget in frame.winfo_children():
+                    if isinstance(widget, ctk.CTkSlider):
+                        widget.configure(state="normal")
+    
+    def _toggle_auto_tone(self, parent):
+        """Toggle manual sliders based on Auto Tone checkbox"""
+        is_auto = self.auto_tone.get()
+        
+        # Disable/Enable all sliders
+        if hasattr(self, 'slider_frames'):
+            for frame in self.slider_frames:
+                for widget in frame.winfo_children():
+                    if isinstance(widget, ctk.CTkSlider):
+                        if is_auto:
+                            widget.configure(state="disabled")
+                        else:
+                            widget.configure(state="normal")
     
     def _browse_folder(self):
         folder = filedialog.askdirectory(title="Select Folder with Images")
@@ -385,15 +653,36 @@ class WebPConverterGUI:
         self._log(f"Quality: {self.quality_var.get()}")
         self._log(f"Lossless: {self.lossless_var.get()}")
         self._log(f"Preserve Alpha: {self.preserve_alpha.get()}")
+        self._log(f"Create B&W Version: {self.create_bw.get()}")
+        self._log(f"Fine-Tuning: {self.fine_tuning_enabled.get()}")
+        if self.fine_tuning_enabled.get():
+            if self.auto_tone.get():
+                self._log(f"  🪄 Auto Tone: Enabled (AI-powered automatic adjustments)")
+            else:
+                adjustments = []
+                if self.exposure.get() != 0: adjustments.append(f"Exposure:{self.exposure.get():.1f}")
+                if self.contrast.get() != 0: adjustments.append(f"Contrast:{self.contrast.get():.0f}")
+                if self.saturation.get() != 0: adjustments.append(f"Saturation:{self.saturation.get():.0f}")
+                if adjustments:
+                    self._log(f"  Adjustments: {', '.join(adjustments)}")
         self._log(f"Compression level: {self.method_var.get()}")
         if target_width:
             self._log(f"Resize: Enabled (Target width: {target_width}px, height will be proportional)")
+            if self.make_horizontal.get():
+                self._log(f"  📐 Make Horizontal: Enabled (vertical images will be cropped to square)")
         else:
             self._log("Resize: Disabled")
         self._log("=" * 60)
         
         self.is_converting = True
-        self.convert_btn.configure(state="disabled", text="Converting...")
+        self.stop_conversion = False
+        self.convert_btn.configure(
+            state="normal",
+            text="⛔ STOP",
+            fg_color="#e74c3c",
+            hover_color="#c0392b",
+            command=self._stop_conversion
+        )
         
         thread = threading.Thread(target=self._convert_thread, args=(source, is_single_file, target_width))
         thread.daemon = True
@@ -402,13 +691,36 @@ class WebPConverterGUI:
     def _convert_thread(self, source: str, is_single_file: bool = False, target_width: int = None):
         """Conversion thread"""
         try:
+            # Prepare fine-tuning settings
+            fine_tuning = None
+            if self.fine_tuning_enabled.get():
+                fine_tuning = {
+                    'auto_tone': self.auto_tone.get(),
+                    'exposure': self.exposure.get(),
+                    'contrast': self.contrast.get(),
+                    'highlights': self.highlights.get(),
+                    'shadows': self.shadows.get(),
+                    'whites': self.whites.get(),
+                    'blacks': self.blacks.get(),
+                    'temperature': self.temperature.get(),
+                    'tint': self.tint.get(),
+                    'vibrance': self.vibrance.get(),
+                    'saturation': self.saturation.get()
+                }
+            
             converter = ImageToWebPConverter(
                 quality=self.quality_var.get(),
                 lossless=self.lossless_var.get(),
                 method=self.method_var.get(),
                 target_width=target_width,
-                preserve_alpha=self.preserve_alpha.get()
+                preserve_alpha=self.preserve_alpha.get(),
+                create_bw=self.create_bw.get(),
+                fine_tuning=fine_tuning,
+                make_horizontal=self.make_horizontal.get()
             )
+            
+            # Store converter reference for stop functionality
+            self.current_converter = converter
             
             if is_single_file:
                 output_file, total, processed, errors = converter.convert_single_file(
@@ -422,6 +734,18 @@ class WebPConverterGUI:
                     progress_callback=self._update_progress
                 )
                 output_info = output_folder
+            
+            # Check if stopped
+            if self.stop_conversion:
+                self._log("=" * 60)
+                self._log(f"⚠️ Conversion stopped by user!")
+                self._log(f"Processed: {processed}/{total} files before stopping")
+                self._log("=" * 60)
+                self.window.after(0, lambda: messagebox.showwarning(
+                    "Stopped", 
+                    f"Conversion stopped!\n\nProcessed: {processed}/{total} files"
+                ))
+                return
             
             self._log("=" * 60)
             self._log(f"Conversion completed!")
@@ -448,10 +772,28 @@ class WebPConverterGUI:
         
         finally:
             self.is_converting = False
+            self.stop_conversion = False
             self.window.after(0, lambda: self.convert_btn.configure(
                 state="normal",
-                text="🚀 Start Conversion"
+                text="🚀 Start Conversion",
+                fg_color="#2ecc71",
+                hover_color="#27ae60",
+                command=self._start_conversion
             ))
+    
+    def _stop_conversion(self):
+        """Stop the conversion process"""
+        if self.is_converting:
+            self.stop_conversion = True
+            if hasattr(self, 'current_converter'):
+                self.current_converter.should_stop = True
+            self._log("⚠️ Stopping conversion... (current file will complete)")
+            self.convert_btn.configure(
+                state="disabled",
+                text="⏳ Stopping...",
+                fg_color="#95a5a6",
+                hover_color="#7f8c8d"
+            )
     
     def run(self):
         self.window.mainloop()
