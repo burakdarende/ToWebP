@@ -12,7 +12,7 @@ Modern, feature-rich GUI application for converting images to WebP format with a
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/Program.png" alt="Main Application Interface" width="750">
+  <img src="screenshots/Program_2.png" alt="Main Application Interface" width="750">
   <br>
   <em>Main Interface - Modern dark theme with comprehensive conversion options</em>
 </p>
