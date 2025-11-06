@@ -1,10 +1,12 @@
 # 🖼️ Image to WebP Converter
 
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/burakdarende/ToWebP)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![GUI](https://img.shields.io/badge/GUI-CustomTkinter-orange.svg)](https://github.com/TomSchimansky/CustomTkinter)
+[![GUI](https://img.shields.io/badge/GUI-Premium%20UI%20v2.0-orange.svg)](https://github.com/TomSchimansky/CustomTkinter)
 [![Image](https://img.shields.io/badge/Image-Pillow-red.svg)](https://python-pillow.org/)
+[![Build](https://img.shields.io/badge/build-automated-brightgreen.svg)](https://github.com/burakdarende/ToWebP/actions)
+[![Download](https://img.shields.io/github/downloads/burakdarende/ToWebP/total?label=downloads&color=blue)](https://github.com/burakdarende/ToWebP/releases)
 [![Stars](https://img.shields.io/github/stars/burakdarende/ToWebP?style=social)](https://github.com/burakdarende/ToWebP/stargazers)
 
 Modern, feature-rich GUI application for converting images to WebP format with advanced editing capabilities and folder structure preservation.
@@ -95,7 +97,19 @@ Modern, feature-rich GUI application for converting images to WebP format with a
 
 ## 🚀 Quick Start
 
-### Option 1: Run from Source (Recommended for Development)
+### Option 1: Download Pre-built Executable (Easiest!)
+
+**No Python installation required!** Download the latest release:
+
+[![Download Latest Release](https://img.shields.io/github/v/release/burakdarende/ToWebP?label=Download%20Latest&style=for-the-badge&logo=github&color=blue)](https://github.com/burakdarende/ToWebP/releases/latest)
+
+- **Windows:** `ImageToWebP.exe` (~23 MB) - Download and double-click to run
+- **macOS:** `ImageToWebP.dmg` - Download, open, drag to Applications
+- **Linux:** `ImageToWebP.tar.gz` - Extract and run
+
+✨ **All executables include Premium UI v2.0 with full features!**
+
+### Option 2: Run from Source (For Developers)
 
 1. **Clone the repository:**
 
@@ -116,54 +130,43 @@ pip install -r requirements.txt
 python gui.py
 ```
 
-### Option 2: Build Standalone Executable
+### Option 3: Build Your Own Executable
 
-#### Windows:
+**Quick build (all platforms):**
 
-```powershell
-# Install dependencies
-pip install -r requirements.txt
+```bash
+# Install build tool
 pip install pyinstaller
 
-# Build
-.\build.ps1
-
-# Or use Python script
+# Build for your platform
 python build_exe.py
-
-# Find executable at: dist/ImageToWebP.exe
 ```
 
-#### macOS:
+**Output locations:**
 
-```bash
-# Install dependencies
-pip3 install -r requirements.txt
-pip3 install pyinstaller
+- **Windows:** `dist/ImageToWebP.exe`
+- **macOS:** `dist/ImageToWebP.app`
+- **Linux:** `dist/ImageToWebP`
 
-# Make build script executable
-chmod +x build.sh
+📖 **Need advanced build options?** See [BUILD.md](BUILD.md) for:
 
-# Build
-./build.sh
+- GitHub Actions automation (multi-platform builds)
+- Custom icon configuration
+- Code signing for macOS
+- Size optimization tips
 
-# Or use Python script
-python3 build_exe.py
+---
 
-# Find app at: dist/ImageToWebP.app
-```
+## 📖 Usage
 
-#### Linux:
-
-```bash
-# Install dependencies
-pip3 install -r requirements.txt
 pip3 install pyinstaller
 
 # Build
+
 python3 build_exe.py
 
 # Find executable at: dist/ImageToWebP
+
 ```
 
 ## 📖 User Guide
@@ -254,40 +257,46 @@ Images are processed in this sequence:
 **Input:**
 
 ```
+
 C:/MyPhotos/
 ├── 2023/
-│   ├── summer/
-│   │   ├── beach.jpg
-│   │   └── sunset.png
-│   └── winter/
-│       └── snow.jpg
+│ ├── summer/
+│ │ ├── beach.jpg
+│ │ └── sunset.png
+│ └── winter/
+│ └── snow.jpg
 └── family.jpg
+
 ```
 
 **First Conversion → Output:**
 
 ```
+
 C:/MyPhotos_WebP/
 ├── 2023/
-│   ├── summer/
-│   │   ├── beach.webp
-│   │   └── sunset.webp
-│   └── winter/
-│       └── snow.webp
+│ ├── summer/
+│ │ ├── beach.webp
+│ │ └── sunset.webp
+│ └── winter/
+│ └── snow.webp
 └── family.webp
+
 ```
 
 **Second Conversion → Output:**
 
 ```
+
 C:/MyPhotos_WebP_2/
 ├── 2023/
-│   ├── summer/
-│   │   ├── beach.webp
-│   │   └── sunset.webp
-│   └── winter/
-│       └── snow.webp
+│ ├── summer/
+│ │ ├── beach.webp
+│ │ └── sunset.webp
+│ └── winter/
+│ └── snow.webp
 └── family.webp
+
 ```
 
 ### Single File Conversion
@@ -344,48 +353,58 @@ C:/MyPhotos_WebP_2/
 **Web Optimization:**
 
 ```
+
 Quality: 75-80
 Lossless: OFF
 Compression: 4
 Resize: ON (1920px or 1200px)
+
 ```
 
 **Photography Archive:**
 
 ```
+
 Quality: 90-100
 Lossless: ON
 Compression: 6
 Preserve Alpha: ON
 Fine-Tuning: Auto Tone ON
+
 ```
 
 **Logo/Graphics:**
 
 ```
+
 Quality: 100
 Lossless: ON
 Compression: 6
 Preserve Alpha: ON
+
 ```
 
 **Social Media:**
 
 ```
+
 Quality: 75
 Lossless: OFF
 Compression: 3
 Resize: ON (1080px)
 Make Horizontal: ON (for Instagram)
+
 ```
 
 **Quick Processing:**
 
 ```
+
 Quality: 70
 Lossless: OFF
 Compression: 0
 Fine-Tuning: OFF
+
 ```
 
 ### File Size Comparison (Average)
@@ -410,20 +429,22 @@ Processing 1000 images (5MB each):
 ### Project Structure
 
 ```
+
 ToWebP/
-├── gui.py              # Main GUI application (800+ lines)
-├── converter.py        # Core conversion engine (600+ lines)
-├── build_exe.py        # Universal build script
-├── build.ps1           # Windows PowerShell build script
-├── build.sh            # macOS/Linux bash build script
-├── start.bat           # Windows quick start
-├── start.ps1           # Windows PowerShell quick start
-├── start.sh            # macOS/Linux quick start
-├── requirements.txt    # Python dependencies
-├── README.md          # This file
-├── KULLANIM.md        # Turkish usage guide
-└── PROJECT_INFO.md    # Detailed project information
-```
+├── gui.py # Main GUI application (800+ lines)
+├── converter.py # Core conversion engine (600+ lines)
+├── build_exe.py # Universal build script
+├── build.ps1 # Windows PowerShell build script
+├── build.sh # macOS/Linux bash build script
+├── start.bat # Windows quick start
+├── start.ps1 # Windows PowerShell quick start
+├── start.sh # macOS/Linux quick start
+├── requirements.txt # Python dependencies
+├── README.md # This file
+├── KULLANIM.md # Turkish usage guide
+└── PROJECT_INFO.md # Detailed project information
+
+````
 
 ### Key Components
 
@@ -460,7 +481,7 @@ pip install pyinstaller
 python build_exe.py
 
 # The script automatically detects your OS and creates appropriate package
-```
+````
 
 ### Quick Start Scripts
 

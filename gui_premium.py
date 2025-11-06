@@ -398,71 +398,71 @@ class WebPConverterPremiumGUI:
         scroll.grid(row=0, column=0, sticky="nsew", padx=15, pady=15)
         scroll.grid_columnconfigure(0, weight=1)
         
-        # Source Selection Card
+        # Source Selection Card - MINIMAL
         source_card = ModernCard(scroll, title="Source Selection")
-        source_card.pack(fill="x", pady=(0, 15))
+        source_card.pack(fill="x", pady=(0, 8))
         content = source_card.get_content_frame()
         
-        # Folder selection
+        # Folder selection - minimal
         folder_label = ctk.CTkLabel(
             content,
-            text="📁 Select Folder:",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            text="📁 Folder:",
+            font=ctk.CTkFont(size=11, weight="bold"),
             anchor="w"
         )
-        folder_label.pack(anchor="w", pady=(5, 5))
+        folder_label.pack(anchor="w", pady=(2, 2))
         
         folder_frame = ctk.CTkFrame(content, fg_color="transparent")
-        folder_frame.pack(fill="x", pady=(0, 12))
+        folder_frame.pack(fill="x", pady=(0, 6))
         folder_frame.grid_columnconfigure(0, weight=1)
         
         self.folder_entry = ctk.CTkEntry(
             folder_frame,
             textvariable=self.source_folder,
-            placeholder_text="Drop folder here or click Browse...",
-            height=45,
-            font=ctk.CTkFont(size=12),
-            corner_radius=8
+            placeholder_text="Browse for folder...",
+            height=35,  # Smaller
+            font=ctk.CTkFont(size=10),
+            corner_radius=6
         )
-        self.folder_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+        self.folder_entry.grid(row=0, column=0, sticky="ew", padx=(0, 6))
         
         browse_folder_btn = ctk.CTkButton(
             folder_frame,
             text="Browse",
             command=self._browse_folder,
-            width=120,
-            height=45,
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8
+            width=80,  # Smaller
+            height=35,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            corner_radius=6
         )
         browse_folder_btn.grid(row=0, column=1)
         
-        # OR divider
-        or_frame = ctk.CTkFrame(content, fg_color="transparent", height=30)
-        or_frame.pack(fill="x", pady=8)
+        # OR divider - minimal
+        or_frame = ctk.CTkFrame(content, fg_color="transparent", height=16)
+        or_frame.pack(fill="x", pady=3)
         
-        or_line1 = ctk.CTkFrame(or_frame, height=2, fg_color=("gray70", "gray30"))
-        or_line1.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        or_line1 = ctk.CTkFrame(or_frame, height=1, fg_color=("gray70", "gray30"))
+        or_line1.pack(side="left", fill="x", expand=True, padx=(0, 6))
         
         or_label = ctk.CTkLabel(
             or_frame,
             text="OR",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=ctk.CTkFont(size=9, weight="bold"),
             text_color=("gray50", "gray60")
         )
         or_label.pack(side="left")
         
-        or_line2 = ctk.CTkFrame(or_frame, height=2, fg_color=("gray70", "gray30"))
-        or_line2.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        or_line2 = ctk.CTkFrame(or_frame, height=1, fg_color=("gray70", "gray30"))
+        or_line2.pack(side="left", fill="x", expand=True, padx=(6, 0))
         
-        # File selection
+        # File selection - minimal
         file_label = ctk.CTkLabel(
             content,
-            text="📄 Select Single File:",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            text="📄 Single File:",
+            font=ctk.CTkFont(size=11, weight="bold"),
             anchor="w"
         )
-        file_label.pack(anchor="w", pady=(5, 5))
+        file_label.pack(anchor="w", pady=(2, 2))
         
         file_frame = ctk.CTkFrame(content, fg_color="transparent")
         file_frame.pack(fill="x")
@@ -471,90 +471,99 @@ class WebPConverterPremiumGUI:
         self.file_entry = ctk.CTkEntry(
             file_frame,
             textvariable=self.source_file,
-            placeholder_text="Drop file here or click Browse...",
-            height=45,
-            font=ctk.CTkFont(size=12),
-            corner_radius=8
+            placeholder_text="Browse for file...",
+            height=35,  # Smaller
+            font=ctk.CTkFont(size=10),
+            corner_radius=6
         )
-        self.file_entry.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+        self.file_entry.grid(row=0, column=0, sticky="ew", padx=(0, 6))
         
         browse_file_btn = ctk.CTkButton(
             file_frame,
             text="Browse",
             command=self._browse_file,
-            width=120,
-            height=45,
-            font=ctk.CTkFont(size=13, weight="bold"),
-            corner_radius=8
+            width=80,  # Smaller
+            height=35,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            corner_radius=6
         )
         browse_file_btn.grid(row=0, column=1)
         
-        # Stats & Preview Card
-        stats_card = ModernCard(scroll, title="Quick Stats & Preview")
-        stats_card.pack(fill="x", pady=(15, 15))
+        # Stats & Preview Card - ULTRA COMPACT
+        stats_card = ModernCard(scroll, title="Quick Stats")
+        stats_card.pack(fill="x", pady=(8, 8))
         stats_content = stats_card.get_content_frame()
         
-        # Stats grid
+        # Stats grid - ultra compact
         stats_grid = ctk.CTkFrame(stats_content, fg_color="transparent")
-        stats_grid.pack(fill="x", pady=5)
+        stats_grid.pack(fill="x", pady=2)
         stats_grid.grid_columnconfigure((0, 1, 2, 3), weight=1)
         
-        # Stat boxes with gradient colors
+        # Stat boxes - MINIMAL
         self.stat_boxes = []
         stat_data = [
-            ("📁", "Files", "0", ("#E3F2FD", "#1565C0")),      # Blue
-            ("⚡", "Speed", "0/s", ("#FFF3E0", "#E65100")),     # Orange
-            ("💾", "Saved", "0 MB", ("#E8F5E9", "#2E7D32")),   # Green
-            ("⏱️", "Time", "0:00", ("#F3E5F5", "#6A1B9A"))     # Purple
+            ("📁", "Files", "0", ("#E3F2FD", "#1565C0")),
+            ("⚡", "Speed", "0/s", ("#FFF3E0", "#E65100")),
+            ("💾", "Saved", "0 MB", ("#E8F5E9", "#2E7D32")),
+            ("⏱️", "Time", "0:00", ("#F3E5F5", "#6A1B9A"))
         ]
         
         for i, (icon, label, value, colors) in enumerate(stat_data):
             stat_box = ctk.CTkFrame(
                 stats_grid,
-                fg_color=colors,  # Colorful gradient backgrounds
-                corner_radius=12,
-                height=85,
-                border_width=2,
-                border_color=(colors[0], colors[1])
+                fg_color=colors,
+                corner_radius=6,
+                height=45,  # Much smaller!
+                border_width=0
             )
-            stat_box.grid(row=0, column=i, sticky="ew", padx=5)
+            stat_box.grid(row=0, column=i, sticky="ew", padx=2)
+            
+            # Compact horizontal layout
+            content_frame = ctk.CTkFrame(stat_box, fg_color="transparent")
+            content_frame.pack(expand=True, fill="both", padx=6, pady=4)
             
             icon_label = ctk.CTkLabel(
-                stat_box,
+                content_frame,
                 text=icon,
-                font=ctk.CTkFont(size=28)
+                font=ctk.CTkFont(size=16)  # Smaller icon
             )
-            icon_label.pack(pady=(10, 2))
+            icon_label.pack(side="left", padx=(0, 4))
+            
+            # Value and label stacked vertically
+            text_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+            text_frame.pack(side="left", fill="both", expand=True)
             
             value_label = ctk.CTkLabel(
-                stat_box,
+                text_frame,
                 text=value,
-                font=ctk.CTkFont(size=18, weight="bold"),
-                text_color=("gray10", "white")
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color=("gray10", "white"),
+                anchor="w"
             )
-            value_label.pack(pady=2)
+            value_label.pack(anchor="w")
             
             label_label = ctk.CTkLabel(
-                stat_box,
+                text_frame,
                 text=label,
-                font=ctk.CTkFont(size=11, weight="bold"),
-                text_color=(colors[1], colors[0])
+                font=ctk.CTkFont(size=8),
+                text_color=(colors[1], colors[0]),
+                anchor="w"
             )
-            label_label.pack(pady=(0, 10))
+            label_label.pack(anchor="w")
             
             self.stat_boxes.append(value_label)
         
-        # Process Log Card
+        # Process Log Card - PRIORITY - Takes most space
         log_card = ModernCard(scroll, title="Process Log")
-        log_card.pack(fill="both", expand=True, pady=(0, 0))
+        log_card.pack(fill="both", expand=True, pady=(3, 0))
         log_content = log_card.get_content_frame()
         
         self.log_text = ctk.CTkTextbox(
             log_content,
-            height=200,
-            font=ctk.CTkFont(family="Consolas", size=11),
+            height=350,  # Even larger for better visibility
+            font=ctk.CTkFont(family="Consolas", size=10),
             wrap="word",
-            corner_radius=8
+            corner_radius=6
         )
         self.log_text.pack(fill="both", expand=True)
         self.log_text.insert("1.0", "🎯 Ready to convert images to WebP format\n")
