@@ -1,5 +1,12 @@
 # 🖼️ Image to WebP Converter
 
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/burakdarende/ToWebP)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GUI](https://img.shields.io/badge/GUI-CustomTkinter-orange.svg)](https://github.com/TomSchimansky/CustomTkinter)
+[![Image](https://img.shields.io/badge/Image-Pillow-red.svg)](https://python-pillow.org/)
+[![Stars](https://img.shields.io/github/stars/burakdarende/ToWebP?style=social)](https://github.com/burakdarende/ToWebP/stargazers)
+
 Modern, feature-rich GUI application for converting images to WebP format with advanced editing capabilities and folder structure preservation.
 
 ## ✨ Key Features
