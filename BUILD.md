@@ -94,17 +94,20 @@ This will:
 The build process is configured in `build_exe.py`:
 
 **Common Arguments:**
+
 - `--windowed` - No console window (GUI only)
 - `--clean` - Clean PyInstaller cache
 - `--noconfirm` - No confirmation prompts
 - `--name` - Executable name: ImageToWebP
 
 **Platform-Specific:**
+
 - **Windows:** `--onefile` (single .exe file)
 - **macOS:** `--onedir` (app bundle directory)
 - **Linux:** `--onefile` (single binary)
 
 **Why onedir for macOS?**
+
 - Avoids PyInstaller v7 deprecation warnings
 - Complies with macOS security and code signing
 - Standard format for macOS applications (.app bundles)

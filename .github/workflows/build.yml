@@ -171,7 +171,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for changelog
+          fetch-depth: 0 # Fetch all history for changelog
 
       - name: Get version
         id: get_version
@@ -198,7 +198,7 @@ jobs:
         run: |
           # Get previous tag
           PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
-          
+
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "First release - generating full changelog"
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
@@ -206,13 +206,13 @@ jobs:
             echo "Generating changelog since $PREVIOUS_TAG"
             CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --reverse)
           fi
-          
+
           # Create release notes
           cat > release_notes.md << 'EOF'
           ## 🎉 ImageToWebP ${{ steps.get_version.outputs.version }}
-          
+
           ### ✨ Premium UI v2.0 Features
-          
+
           - 🎨 **Beautiful Modern Interface** - Tab-based navigation with gradient themes
           - 📊 **Live Statistics Dashboard** - Real-time files processed, speed, space saved
           - 🎬 **Animated Progress Bar** - Color-changing progress (Orange → Blue → Green)
@@ -220,30 +220,30 @@ jobs:
           - 📁 **Folder Structure Preservation** - Maintains exact directory hierarchy
           - ⚡ **Multi-threading Support** - Fast batch processing
           - 🌓 **Dark/Light Mode** - Theme toggle for user preference
-          
+
           ### 📦 Downloads
-          
+
           | Platform | File | Size | Notes |
           |----------|------|------|-------|
           | 🪟 Windows | `ImageToWebP.exe` | ~23 MB | Single file executable |
           | 🍎 macOS | `ImageToWebP.dmg` | ~20-25 MB | Drag & drop installer |
           | 🐧 Linux | `ImageToWebP.tar.gz` | ~25-30 MB | Extract and run |
-          
+
           ### 🚀 Quick Start
-          
+
           **Windows:**
           ```bash
           # Download ImageToWebP.exe
           # Double-click to run - no installation needed!
           ```
-          
+
           **macOS:**
           ```bash
           # Download ImageToWebP.dmg
           # Open DMG, drag app to Applications folder
           # Done!
           ```
-          
+
           **Linux:**
           ```bash
           # Download and extract
@@ -251,38 +251,38 @@ jobs:
           chmod +x ImageToWebP
           ./ImageToWebP
           ```
-          
+
           ### 📝 Changelog
-          
+
           EOF
-          
+
           if [ ! -z "$CHANGELOG" ]; then
             echo "$CHANGELOG" >> release_notes.md
           else
             echo "- Initial release" >> release_notes.md
           fi
-          
+
           cat >> release_notes.md << 'EOF'
-          
+
           ### 🔧 System Requirements
-          
+
           - **Windows:** Windows 10/11 (64-bit)
           - **macOS:** macOS 10.13+ (Intel & Apple Silicon)
           - **Linux:** Ubuntu 18.04+ or equivalent
-          
+
           ### 🐛 Known Issues
-          
+
           - None reported yet! Please open an issue if you encounter any problems.
-          
+
           ### 💝 Support
-          
+
           If you find this useful, please ⭐ star the repository!
-          
+
           ---
-          
+
           **Full Changelog:** https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ steps.get_version.outputs.version }}
           EOF
-          
+
           cat release_notes.md
 
       - name: Create GitHub Release
