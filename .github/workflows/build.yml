@@ -44,16 +44,6 @@ jobs:
           path: dist/ImageToWebP.exe
           retention-days: 90
 
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/ImageToWebP.exe
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-macos:
     runs-on: macos-latest
     steps:
@@ -97,7 +87,7 @@ jobs:
         run: |
           # Install create-dmg
           brew install create-dmg
-          
+
           # Create DMG from .app bundle
           create-dmg \
             --volname "ImageToWebP" \
@@ -124,18 +114,6 @@ jobs:
             ImageToWebP-*.zip
             dist/ImageToWebP.app
           retention-days: 90
-
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            ImageToWebP-*.dmg
-            ImageToWebP-*.zip
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
     runs-on: ubuntu-latest
@@ -184,12 +162,138 @@ jobs:
           path: dist/ImageToWebP-Linux-*.tar.gz
           retention-days: 90
 
-      - name: Create Release (on tag)
-        if: startsWith(github.ref, 'refs/tags/')
+  create-release:
+    name: Create Release with Changelog
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog
+
+      - name: Get version
+        id: get_version
+        run: |
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "version_number=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Organize files
+        run: |
+          mkdir -p release-files
+          find release-artifacts -type f -name "*.exe" -exec cp {} release-files/ \;
+          find release-artifacts -type f -name "*.dmg" -exec cp {} release-files/ \;
+          find release-artifacts -type f -name "*.zip" -exec cp {} release-files/ \;
+          find release-artifacts -type f -name "*.tar.gz" -exec cp {} release-files/ \;
+          ls -lah release-files/
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "First release - generating full changelog"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            echo "Generating changelog since $PREVIOUS_TAG"
+            CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --reverse)
+          fi
+          
+          # Create release notes
+          cat > release_notes.md << 'EOF'
+          ## 🎉 ImageToWebP ${{ steps.get_version.outputs.version }}
+          
+          ### ✨ Premium UI v2.0 Features
+          
+          - 🎨 **Beautiful Modern Interface** - Tab-based navigation with gradient themes
+          - 📊 **Live Statistics Dashboard** - Real-time files processed, speed, space saved
+          - 🎬 **Animated Progress Bar** - Color-changing progress (Orange → Blue → Green)
+          - 🖼️ **Advanced Image Processing** - Auto Tone, Contrast, Brightness, Saturation controls
+          - 📁 **Folder Structure Preservation** - Maintains exact directory hierarchy
+          - ⚡ **Multi-threading Support** - Fast batch processing
+          - 🌓 **Dark/Light Mode** - Theme toggle for user preference
+          
+          ### 📦 Downloads
+          
+          | Platform | File | Size | Notes |
+          |----------|------|------|-------|
+          | 🪟 Windows | `ImageToWebP.exe` | ~23 MB | Single file executable |
+          | 🍎 macOS | `ImageToWebP.dmg` | ~20-25 MB | Drag & drop installer |
+          | 🐧 Linux | `ImageToWebP.tar.gz` | ~25-30 MB | Extract and run |
+          
+          ### 🚀 Quick Start
+          
+          **Windows:**
+          ```bash
+          # Download ImageToWebP.exe
+          # Double-click to run - no installation needed!
+          ```
+          
+          **macOS:**
+          ```bash
+          # Download ImageToWebP.dmg
+          # Open DMG, drag app to Applications folder
+          # Done!
+          ```
+          
+          **Linux:**
+          ```bash
+          # Download and extract
+          tar -xzf ImageToWebP-Linux-${{ steps.get_version.outputs.version }}.tar.gz
+          chmod +x ImageToWebP
+          ./ImageToWebP
+          ```
+          
+          ### 📝 Changelog
+          
+          EOF
+          
+          if [ ! -z "$CHANGELOG" ]; then
+            echo "$CHANGELOG" >> release_notes.md
+          else
+            echo "- Initial release" >> release_notes.md
+          fi
+          
+          cat >> release_notes.md << 'EOF'
+          
+          ### 🔧 System Requirements
+          
+          - **Windows:** Windows 10/11 (64-bit)
+          - **macOS:** macOS 10.13+ (Intel & Apple Silicon)
+          - **Linux:** Ubuntu 18.04+ or equivalent
+          
+          ### 🐛 Known Issues
+          
+          - None reported yet! Please open an issue if you encounter any problems.
+          
+          ### 💝 Support
+          
+          If you find this useful, please ⭐ star the repository!
+          
+          ---
+          
+          **Full Changelog:** https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ steps.get_version.outputs.version }}
+          EOF
+          
+          cat release_notes.md
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/ImageToWebP-Linux-*.tar.gz
+          name: "ImageToWebP ${{ steps.get_version.outputs.version }} - Premium UI"
+          body_path: release_notes.md
+          files: |
+            release-files/*
           draft: false
           prerelease: false
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

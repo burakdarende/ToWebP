@@ -3,10 +3,12 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/burakdarende/ToWebP)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/burakdarende/ToWebP?label=version&color=blue)](https://github.com/burakdarende/ToWebP/releases/latest)
 [![GUI](https://img.shields.io/badge/GUI-Premium%20UI%20v2.0-orange.svg)](https://github.com/TomSchimansky/CustomTkinter)
 [![Image](https://img.shields.io/badge/Image-Pillow-red.svg)](https://python-pillow.org/)
 [![Build](https://img.shields.io/badge/build-automated-brightgreen.svg)](https://github.com/burakdarende/ToWebP/actions)
 [![Download](https://img.shields.io/github/downloads/burakdarende/ToWebP/total?label=downloads&color=blue)](https://github.com/burakdarende/ToWebP/releases)
+[![Changelog](https://img.shields.io/badge/changelog-keep%20a%20changelog-orange.svg)](CHANGELOG.md)
 [![Stars](https://img.shields.io/github/stars/burakdarende/ToWebP?style=social)](https://github.com/burakdarende/ToWebP/stargazers)
 
 Modern, feature-rich GUI application for converting images to WebP format with advanced editing capabilities and folder structure preservation.
