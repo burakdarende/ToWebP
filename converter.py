@@ -15,7 +15,7 @@ class ImageToWebPConverter:
     # Supported image formats
     SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif'}
     
-    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6, target_width: int = None):
+    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6, target_width: int = None, preserve_alpha: bool = True):
         """
         Initialize converter with settings
         
@@ -24,11 +24,13 @@ class ImageToWebPConverter:
             lossless: Use lossless compression
             method: Compression method (0-6, higher = better compression but slower)
             target_width: Target width for resizing (height will be calculated proportionally)
+            preserve_alpha: Preserve alpha/transparency channel (if False, converts to white background)
         """
         self.quality = quality
         self.lossless = lossless
         self.method = method
         self.target_width = target_width
+        self.preserve_alpha = preserve_alpha
         self.total_files = 0
         self.processed_files = 0
         self.errors = []
@@ -179,16 +181,26 @@ class ImageToWebPConverter:
                         new_height = int(self.target_width * aspect_ratio)
                         img = img.resize((self.target_width, new_height), Image.Resampling.LANCZOS)
                 
-                # Convert RGBA to RGB if necessary for lossy compression
+                # Convert RGBA to RGB if necessary
                 if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
-                    # Keep alpha channel for lossless
-                    if not self.lossless and img.mode == 'RGBA':
-                        # Create white background for lossy
-                        background = Image.new('RGB', img.size, (255, 255, 255))
-                        background.paste(img, mask=img.split()[-1])
-                        img = background
-                    elif img.mode == 'P':
-                        img = img.convert('RGBA' if self.lossless else 'RGB')
+                    if self.preserve_alpha:
+                        # Keep alpha channel - convert to RGBA
+                        if img.mode == 'P':
+                            img = img.convert('RGBA')
+                        elif img.mode == 'LA':
+                            img = img.convert('RGBA')
+                        # RGBA stays as is
+                    else:
+                        # Remove alpha channel - convert to RGB with white background
+                        if img.mode in ('RGBA', 'LA'):
+                            background = Image.new('RGB', img.size, (255, 255, 255))
+                            if img.mode == 'RGBA':
+                                background.paste(img, mask=img.split()[-1])
+                            else:
+                                background.paste(img.convert('RGB'))
+                            img = background
+                        elif img.mode == 'P':
+                            img = img.convert('RGB')
                 elif img.mode not in ('RGB', 'RGBA'):
                     img = img.convert('RGB')
                 

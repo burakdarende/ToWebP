@@ -18,7 +18,7 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("850x860")
+        self.window.geometry("850x900")
         self.window.resizable(False, False)
         
         # Set theme
@@ -31,6 +31,7 @@ class WebPConverterGUI:
         self.quality_var = ctk.IntVar(value=85)
         self.lossless_var = ctk.BooleanVar(value=False)
         self.method_var = ctk.IntVar(value=4)
+        self.preserve_alpha = ctk.BooleanVar(value=True)
         self.resize_enabled = ctk.BooleanVar(value=False)
         self.resize_width = ctk.StringVar(value="")
         self.is_converting = False
@@ -166,6 +167,15 @@ class WebPConverterGUI:
             command=self._toggle_quality
         )
         lossless_check.pack(anchor="w", padx=10, pady=8)
+        
+        # Alpha/Transparency checkbox
+        alpha_check = ctk.CTkCheckBox(
+            settings_frame,
+            text="Preserve Alpha Channel (Transparency support for PNG images)",
+            variable=self.preserve_alpha,
+            font=ctk.CTkFont(size=11)
+        )
+        alpha_check.pack(anchor="w", padx=10, pady=8)
         
         # Method slider
         method_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
@@ -374,6 +384,7 @@ class WebPConverterGUI:
         self._log(f"Source: {source}")
         self._log(f"Quality: {self.quality_var.get()}")
         self._log(f"Lossless: {self.lossless_var.get()}")
+        self._log(f"Preserve Alpha: {self.preserve_alpha.get()}")
         self._log(f"Compression level: {self.method_var.get()}")
         if target_width:
             self._log(f"Resize: Enabled (Target width: {target_width}px, height will be proportional)")
@@ -395,7 +406,8 @@ class WebPConverterGUI:
                 quality=self.quality_var.get(),
                 lossless=self.lossless_var.get(),
                 method=self.method_var.get(),
-                target_width=target_width
+                target_width=target_width,
+                preserve_alpha=self.preserve_alpha.get()
             )
             
             if is_single_file:
