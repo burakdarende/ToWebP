@@ -1,6 +1,9 @@
 """
 Modern GUI for Image to WebP Converter
 Cross-platform compatible interface using CustomTkinter
+
+NOTE: This file now automatically loads the Premium UI (gui_premium.py) if available.
+Legacy UI is kept as fallback.
 """
 import os
 import sys
@@ -18,7 +21,7 @@ class WebPConverterGUI:
         # Initialize main window
         self.window = ctk.CTk()
         self.window.title("Image to WebP Converter")
-        self.window.geometry("850x1050")
+        self.window.geometry("850x1150")
         self.window.resizable(False, False)
         
         # Set theme
@@ -37,6 +40,8 @@ class WebPConverterGUI:
         self.resize_enabled = ctk.BooleanVar(value=False)
         self.resize_width = ctk.StringVar(value="")
         self.make_horizontal = ctk.BooleanVar(value=False)
+        self.uniform_size = ctk.BooleanVar(value=False)
+        self.uniform_orientation = ctk.StringVar(value="horizontal")
         self.is_converting = False
         self.stop_conversion = False
         
@@ -304,6 +309,59 @@ class WebPConverterGUI:
         )
         horizontal_check.pack(anchor="w", pady=(8, 0))
         
+        # Uniform size option (advanced cropping)
+        uniform_frame = ctk.CTkFrame(resize_frame, fg_color="transparent")
+        uniform_frame.pack(fill="x", pady=(8, 0))
+        
+        uniform_check = ctk.CTkCheckBox(
+            uniform_frame,
+            text="⚖️ Make ALL Images Same Size (crops to uniform dimensions)",
+            variable=self.uniform_size,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            command=self._toggle_uniform_size
+        )
+        uniform_check.pack(anchor="w")
+        
+        # Warning label
+        uniform_warning = ctk.CTkLabel(
+            uniform_frame,
+            text="⚠️ This will crop ALL images to same dimensions. Analyzes folder to find optimal ratio.",
+            font=ctk.CTkFont(size=9),
+            text_color="#ff9800"
+        )
+        uniform_warning.pack(anchor="w", padx=(25, 0), pady=(2, 4))
+        
+        # Orientation selection
+        self.orientation_frame = ctk.CTkFrame(uniform_frame, fg_color="transparent")
+        self.orientation_frame.pack(fill="x", padx=(25, 0), pady=(4, 0))
+        
+        orientation_label = ctk.CTkLabel(
+            self.orientation_frame,
+            text="Target Orientation:",
+            font=ctk.CTkFont(size=10)
+        )
+        orientation_label.pack(side="left", padx=(0, 8))
+        
+        self.horizontal_radio = ctk.CTkRadioButton(
+            self.orientation_frame,
+            text="Horizontal (Landscape)",
+            variable=self.uniform_orientation,
+            value="horizontal",
+            font=ctk.CTkFont(size=10),
+            state="disabled"
+        )
+        self.horizontal_radio.pack(side="left", padx=(0, 12))
+        
+        self.vertical_radio = ctk.CTkRadioButton(
+            self.orientation_frame,
+            text="Vertical (Portrait)",
+            variable=self.uniform_orientation,
+            value="vertical",
+            font=ctk.CTkFont(size=10),
+            state="disabled"
+        )
+        self.vertical_radio.pack(side="left")
+        
         # Progress section
         self.progress_frame = ctk.CTkFrame(main_frame)
         self.progress_frame.pack(fill="both", expand=True, pady=(0, 12))
@@ -369,6 +427,15 @@ class WebPConverterGUI:
             self.resize_entry.configure(state="normal")
         else:
             self.resize_entry.configure(state="disabled")
+    
+    def _toggle_uniform_size(self):
+        """Toggle uniform size orientation options"""
+        if self.uniform_size.get():
+            self.horizontal_radio.configure(state="normal")
+            self.vertical_radio.configure(state="normal")
+        else:
+            self.horizontal_radio.configure(state="disabled")
+            self.vertical_radio.configure(state="disabled")
     
     def _toggle_fine_tuning(self):
         """Toggle fine-tuning button based on checkbox"""
@@ -670,6 +737,10 @@ class WebPConverterGUI:
             self._log(f"Resize: Enabled (Target width: {target_width}px, height will be proportional)")
             if self.make_horizontal.get():
                 self._log(f"  📐 Make Horizontal: Enabled (vertical images will be cropped to square)")
+            if self.uniform_size.get():
+                self._log(f"  ⚖️ Uniform Size: Enabled (ALL images will be same size)")
+                self._log(f"  Target Orientation: {self.uniform_orientation.get().upper()}")
+                self._log(f"  ⚠️ Will analyze folder and crop all images to optimal ratio")
         else:
             self._log("Resize: Disabled")
         self._log("=" * 60)
@@ -716,7 +787,9 @@ class WebPConverterGUI:
                 preserve_alpha=self.preserve_alpha.get(),
                 create_bw=self.create_bw.get(),
                 fine_tuning=fine_tuning,
-                make_horizontal=self.make_horizontal.get()
+                make_horizontal=self.make_horizontal.get(),
+                uniform_size=self.uniform_size.get(),
+                uniform_orientation=self.uniform_orientation.get()
             )
             
             # Store converter reference for stop functionality
@@ -800,8 +873,23 @@ class WebPConverterGUI:
 
 
 def main():
-    app = WebPConverterGUI()
-    app.run()
+    """Main entry point - automatically uses Premium UI if available"""
+    try:
+        # Try to import and use Premium UI
+        from gui_premium import WebPConverterPremiumGUI
+        print("✨ Starting Premium UI...")
+        app = WebPConverterPremiumGUI()
+        app.run()
+    except ImportError as e:
+        # Fallback to legacy UI if premium not available
+        print(f"⚠️ Premium UI not available ({e}), using legacy UI...")
+        app = WebPConverterGUI()
+        app.run()
+    except Exception as e:
+        print(f"❌ Error starting application: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

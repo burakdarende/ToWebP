@@ -9,6 +9,8 @@
 
 Modern, feature-rich GUI application for converting images to WebP format with advanced editing capabilities and folder structure preservation.
 
+> 🎉 **NEW! Premium UI v2.0** - Beautiful responsive interface with real-time statistics, animated progress, and gradient color themes!
+
 ## 📸 Screenshots
 
 <p align="center">
@@ -25,7 +27,18 @@ Modern, feature-rich GUI application for converting images to WebP format with a
 
 ## ✨ Key Features
 
-### 🎨 Modern Interface
+### 🎨 Premium Modern Interface (NEW v2.0!)
+
+- **Tab-Based Navigation** - Organized into Convert, Settings, Fine-Tuning, and About tabs
+- **Live Statistics Dashboard** - Real-time display of files processed, speed, space saved, and elapsed time
+- **Animated Progress Bar** - Color-changing progress (Orange → Blue → Green) with smooth transitions
+- **Collapsible Cards** - Expandable/collapsible sections for better space management
+- **Gradient Color Themes** - Beautiful color-coded stat boxes with unique gradients
+- **Responsive Design** - Auto-scales from 1000x700 to 1400x900 based on screen size
+- **Theme Toggle** - Quick switch between light and dark modes
+- **Hover Effects** - Interactive UI elements with smooth animations
+
+### 🎨 Classic Interface Features
 
 - **Beautiful Dark Theme UI** - Intuitive and professional interface built with CustomTkinter
 - **Real-time Progress** - Live conversion progress with detailed logging

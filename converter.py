@@ -16,7 +16,7 @@ class ImageToWebPConverter:
     # Supported image formats
     SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif'}
     
-    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6, target_width: int = None, preserve_alpha: bool = True, create_bw: bool = False, fine_tuning: dict = None, make_horizontal: bool = False):
+    def __init__(self, quality: int = 85, lossless: bool = False, method: int = 6, target_width: int = None, preserve_alpha: bool = True, create_bw: bool = False, fine_tuning: dict = None, make_horizontal: bool = False, uniform_size: bool = False, uniform_orientation: str = "horizontal"):
         """
         Initialize converter with settings
         
@@ -29,6 +29,8 @@ class ImageToWebPConverter:
             create_bw: Create additional black & white version with _bw suffix
             fine_tuning: Dictionary of fine-tuning adjustments (exposure, contrast, etc.)
             make_horizontal: If True, vertical images will be padded to match target width (landscape mode)
+            uniform_size: If True, all images will be cropped to same dimensions
+            uniform_orientation: Target orientation for uniform size ('horizontal' or 'vertical')
         """
         self.quality = quality
         self.lossless = lossless
@@ -38,10 +40,13 @@ class ImageToWebPConverter:
         self.create_bw = create_bw
         self.fine_tuning = fine_tuning or {}
         self.make_horizontal = make_horizontal
+        self.uniform_size = uniform_size
+        self.uniform_orientation = uniform_orientation
         self.total_files = 0
         self.processed_files = 0
         self.errors = []
         self.should_stop = False
+        self.uniform_dimensions = None  # Will store calculated uniform dimensions
         
     def convert_folder(
         self, 
@@ -73,6 +78,10 @@ class ImageToWebPConverter:
         
         # Count total files first
         self._count_images(source_path)
+        
+        # Analyze folder for uniform size if enabled
+        if self.uniform_size and self.target_width:
+            self.uniform_dimensions = self._calculate_uniform_dimensions(source_path, progress_callback)
         
         # Create output folder
         output_path.mkdir(exist_ok=True)
@@ -191,7 +200,13 @@ class ImageToWebPConverter:
                 # Resize if target width is specified
                 if self.target_width and self.target_width > 0:
                     original_width, original_height = img.size
-                    if original_width != self.target_width:
+                    
+                    # Uniform size mode: crop all images to same dimensions
+                    if self.uniform_size and self.uniform_dimensions:
+                        target_w, target_h = self.uniform_dimensions
+                        img = self._crop_to_uniform_size(img, target_w, target_h)
+                    
+                    elif original_width != self.target_width:
                         # Calculate proportional height
                         aspect_ratio = original_height / original_width
                         new_height = int(self.target_width * aspect_ratio)
@@ -598,5 +613,116 @@ class ImageToWebPConverter:
             if not versioned_file.exists():
                 return versioned_file
             version += 1
+    
+    def _calculate_uniform_dimensions(
+        self,
+        directory: Path,
+        progress_callback: Optional[Callable[[str, int, int], None]] = None
+    ) -> tuple[int, int]:
+        """
+        Analyze all images in folder to calculate optimal uniform dimensions
+        
+        Args:
+            directory: Source directory to analyze
+            progress_callback: Progress callback function
+            
+        Returns:
+            Tuple of (width, height) for uniform size
+        """
+        if progress_callback:
+            progress_callback("🔍 Analyzing images for optimal dimensions...", 0, self.total_files)
+        
+        ratios = []
+        
+        # Collect aspect ratios from all images
+        for item in directory.rglob('*'):
+            if item.is_file() and item.suffix.lower() in self.SUPPORTED_FORMATS:
+                try:
+                    with Image.open(item) as img:
+                        width, height = img.size
+                        ratio = height / width
+                        ratios.append(ratio)
+                except Exception:
+                    continue
+        
+        if not ratios:
+            # Fallback: use target width with square dimensions
+            return (self.target_width, self.target_width)
+        
+        # Calculate median ratio (more robust than mean)
+        ratios.sort()
+        median_ratio = ratios[len(ratios) // 2]
+        
+        # Calculate dimensions based on orientation preference
+        if self.uniform_orientation == "horizontal":
+            # Width is target_width, calculate height from median ratio
+            target_width = self.target_width
+            target_height = int(target_width * median_ratio)
+            
+            # Ensure it's landscape (width >= height)
+            if target_height > target_width:
+                # Flip: make it landscape
+                target_height = int(target_width / median_ratio)
+                if target_height > target_width:
+                    # Still taller, force square
+                    target_height = target_width
+        else:  # vertical
+            # Width is target_width, but we want portrait
+            target_width = self.target_width
+            target_height = int(target_width * median_ratio)
+            
+            # Ensure it's portrait (height >= width)
+            if target_height < target_width:
+                # Make it taller
+                target_height = int(target_width * 1.5)  # 2:3 ratio for portrait
+        
+        if progress_callback:
+            progress_callback(
+                f"📐 Calculated uniform dimensions: {target_width}x{target_height} (ratio: {target_height/target_width:.2f})",
+                0,
+                self.total_files
+            )
+        
+        return (target_width, target_height)
+    
+    def _crop_to_uniform_size(self, img: Image.Image, target_w: int, target_h: int) -> Image.Image:
+        """
+        Resize and crop image to exact uniform dimensions
+        
+        Args:
+            img: PIL Image object
+            target_w: Target width
+            target_h: Target height
+            
+        Returns:
+            Resized and cropped image
+        """
+        original_w, original_h = img.size
+        target_ratio = target_h / target_w
+        original_ratio = original_h / original_w
+        
+        # Resize image to cover target dimensions (larger dimension)
+        if original_ratio > target_ratio:
+            # Image is taller, fit to width
+            new_width = target_w
+            new_height = int(target_w * original_ratio)
+        else:
+            # Image is wider, fit to height
+            new_height = target_h
+            new_width = int(target_h / original_ratio)
+        
+        # Resize with high quality
+        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Calculate crop coordinates (center crop)
+        left = (new_width - target_w) // 2
+        top = (new_height - target_h) // 2
+        right = left + target_w
+        bottom = top + target_h
+        
+        # Crop to exact dimensions
+        img = img.crop((left, top, right, bottom))
+        
+        return img
 
 
