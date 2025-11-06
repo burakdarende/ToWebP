@@ -20,9 +20,11 @@ python build_exe.py
 
 **Output locations:**
 
-- **Windows:** `dist/ImageToWebP.exe` (~23 MB)
-- **macOS:** `dist/ImageToWebP.app` (app bundle)
-- **Linux:** `dist/ImageToWebP` (executable)
+- **Windows:** `dist/ImageToWebP.exe` (~23 MB) - Single file executable
+- **macOS:** `dist/ImageToWebP.app` (app bundle directory) - ~30-40 MB
+- **Linux:** `dist/ImageToWebP` (executable) - ~25-30 MB
+
+**Note:** macOS builds use `--onedir` mode (app bundle) instead of `--onefile` to comply with macOS security requirements and avoid PyInstaller deprecation warnings.
 
 ---
 
@@ -71,10 +73,12 @@ This will:
 
 ### macOS
 
-- **File:** `ImageToWebP.app` or `ImageToWebP.dmg`
-- **Size:** ~30-35 MB
-- **Format:** Native .app bundle or .dmg installer
-- **Compatibility:** macOS 10.13+
+- **File:** `ImageToWebP.app` (app bundle) + `ImageToWebP.dmg` (installer)
+- **Size:** ~30-40 MB (.app bundle), ~20-25 MB (.dmg compressed)
+- **Format:** Native .app bundle packaged in .dmg installer
+- **Mode:** `--onedir` (directory bundle, recommended for macOS)
+- **Compatibility:** macOS 10.13+ (ARM64 and Intel supported)
+- **Note:** Uses onedir mode to avoid PyInstaller v7 deprecation and macOS security issues
 
 ### Linux
 
@@ -89,14 +93,21 @@ This will:
 
 The build process is configured in `build_exe.py`:
 
-```python
-PyInstaller Arguments:
-- --windowed       # No console window (GUI only)
-- --onefile        # Single executable file
-- --clean          # Clean PyInstaller cache
-- --noconfirm      # No confirmation prompts
-- --name           # Executable name: ImageToWebP
-```
+**Common Arguments:**
+- `--windowed` - No console window (GUI only)
+- `--clean` - Clean PyInstaller cache
+- `--noconfirm` - No confirmation prompts
+- `--name` - Executable name: ImageToWebP
+
+**Platform-Specific:**
+- **Windows:** `--onefile` (single .exe file)
+- **macOS:** `--onedir` (app bundle directory)
+- **Linux:** `--onefile` (single binary)
+
+**Why onedir for macOS?**
+- Avoids PyInstaller v7 deprecation warnings
+- Complies with macOS security and code signing
+- Standard format for macOS applications (.app bundles)
 
 ### Customizing Build
 

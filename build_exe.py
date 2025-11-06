@@ -17,21 +17,26 @@ def build():
         'gui.py',                       # Main script
         '--name=ImageToWebP',           # Application name
         '--windowed',                   # No console window (GUI app)
-        '--onefile',                    # Single file executable
         '--clean',                      # Clean PyInstaller cache
         '--noconfirm',                  # Replace output directory without asking
     ]
     
     # Platform-specific settings
     if platform == 'darwin':  # macOS
+        # Use onedir for macOS (onefile + windowed is deprecated)
         args.extend([
-            '--icon=NONE',
+            '--onedir',  # Directory bundle (required for .app)
             '--osx-bundle-identifier=com.imagetowebp.converter',
         ])
+        # Optional: Add icon if available
+        # args.append('--icon=icon.icns')
     elif platform == 'win32':  # Windows
-        # You can add an icon here if you have one
+        # Use onefile for Windows
+        args.append('--onefile')
+        # Optional: Add icon if available
         # args.append('--icon=icon.ico')
-        pass
+    else:  # Linux
+        args.append('--onefile')
     
     print("=" * 60)
     print(f"Building executable for {platform}")
