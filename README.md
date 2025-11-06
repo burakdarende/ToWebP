@@ -16,15 +16,9 @@ Modern, feature-rich GUI application for converting images to WebP format with a
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="screenshots/Program_2.png" alt="Main Application Interface" width="750">
+  <img src="screenshots/Program_Premium.png" alt="Main Application Interface" width="750">
   <br>
   <em>Main Interface - Modern dark theme with comprehensive conversion options</em>
-</p>
-
-<p align="center">
-  <img src="screenshots/Adjust.png" alt="Fine-Tuning Adjustments" width="550">
-  <br>
-  <em>Fine-Tuning Dialog - Professional editing controls with Auto Tone and manual adjustments</em>
 </p>
 
 ## ✨ Key Features
