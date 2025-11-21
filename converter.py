@@ -51,6 +51,7 @@ class ImageToWebPConverter:
     def convert_folder(
         self, 
         source_folder: str, 
+        output_folder: str = None,
         progress_callback: Optional[Callable[[str, int, int], None]] = None
     ) -> tuple[str, int, int, list]:
         """
@@ -58,6 +59,7 @@ class ImageToWebPConverter:
         
         Args:
             source_folder: Path to source folder
+            output_folder: Optional custom output folder path
             progress_callback: Optional callback(message, current, total)
             
         Returns:
@@ -67,9 +69,18 @@ class ImageToWebPConverter:
         if not source_path.exists():
             raise ValueError(f"Source folder does not exist: {source_folder}")
             
-        # Create output folder name with versioning
-        output_folder = self._get_unique_folder_name(source_folder)
-        output_path = Path(output_folder)
+        # Determine output folder
+        if output_folder:
+            output_path = Path(output_folder)
+            # If custom folder, we use it directly (creating if needed)
+            # We don't append _WebP unless it's the same as source to avoid confusion
+            if output_path == source_path:
+                 output_folder = self._get_unique_folder_name(source_folder)
+                 output_path = Path(output_folder)
+        else:
+            # Create output folder name with versioning (default behavior)
+            output_folder = self._get_unique_folder_name(source_folder)
+            output_path = Path(output_folder)
         
         # Reset counters
         self.total_files = 0
@@ -84,16 +95,17 @@ class ImageToWebPConverter:
             self.uniform_dimensions = self._calculate_uniform_dimensions(source_path, progress_callback)
         
         # Create output folder
-        output_path.mkdir(exist_ok=True)
+        output_path.mkdir(parents=True, exist_ok=True)
         
         # Process all files
         self._process_directory(source_path, output_path, source_path, progress_callback)
         
-        return output_folder, self.total_files, self.processed_files, self.errors
+        return str(output_path), self.total_files, self.processed_files, self.errors
     
     def convert_single_file(
         self,
         source_file: str,
+        output_folder: str = None,
         progress_callback: Optional[Callable[[str, int, int], None]] = None
     ) -> tuple[str, int, int, list]:
         """
@@ -101,6 +113,7 @@ class ImageToWebPConverter:
         
         Args:
             source_file: Path to source image file
+            output_folder: Optional custom output folder path
             progress_callback: Optional callback(message, current, total)
             
         Returns:
@@ -123,12 +136,19 @@ class ImageToWebPConverter:
         self.errors = []
         self.should_stop = False
         
+        # Determine output directory
+        if output_folder:
+            output_dir = Path(output_folder)
+            output_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            output_dir = source_path.parent
+            
         # Create output file path with versioning
-        output_file = self._get_unique_file_name(source_path)
+        output_file = self._get_unique_file_name(source_path, output_dir)
         
         # Convert the file (check for stop)
         if not self.should_stop:
-            self._convert_image(source_path, source_path.parent, progress_callback, output_file)
+            self._convert_image(source_path, output_dir, progress_callback, output_file)
         
         return str(output_file), self.total_files, self.processed_files, self.errors
     
@@ -590,17 +610,21 @@ class ImageToWebPConverter:
                 return versioned_folder
             version += 1
     
-    def _get_unique_file_name(self, source_path: Path) -> Path:
+    def _get_unique_file_name(self, source_path: Path, output_dir: Path = None) -> Path:
         """
         Generate unique file name with version number if file exists
         
         Args:
             source_path: Source file path
+            output_dir: Output directory (optional, defaults to source parent)
             
         Returns:
             Unique output file path with version suffix if needed
         """
-        output_file = source_path.parent / f"{source_path.stem}.webp"
+        if output_dir is None:
+            output_dir = source_path.parent
+            
+        output_file = output_dir / f"{source_path.stem}.webp"
         
         # Check if file already exists
         if not output_file.exists():
@@ -609,7 +633,7 @@ class ImageToWebPConverter:
         # Find next available version number
         version = 2
         while True:
-            versioned_file = source_path.parent / f"{source_path.stem}_WebP_{version}.webp"
+            versioned_file = output_dir / f"{source_path.stem}_WebP_{version}.webp"
             if not versioned_file.exists():
                 return versioned_file
             version += 1

@@ -489,6 +489,59 @@ class WebPConverterPremiumGUI:
         )
         browse_file_btn.grid(row=0, column=1)
         
+        # Output Destination Card
+        output_card = ModernCard(scroll, title="Output Destination")
+        output_card.pack(fill="x", pady=(8, 8))
+        output_content = output_card.get_content_frame()
+        
+        output_label = ctk.CTkLabel(
+            output_content,
+            text="📂 Output Folder (Optional):",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            anchor="w"
+        )
+        output_label.pack(anchor="w", pady=(2, 2))
+        
+        output_frame = ctk.CTkFrame(output_content, fg_color="transparent")
+        output_frame.pack(fill="x")
+        output_frame.grid_columnconfigure(0, weight=1)
+        
+        self.output_folder_var = ctk.StringVar()
+        self.output_entry = ctk.CTkEntry(
+            output_frame,
+            textvariable=self.output_folder_var,
+            placeholder_text="Default: Same as source (or _WebP folder)",
+            height=35,
+            font=ctk.CTkFont(size=10),
+            corner_radius=6,
+            state="readonly"
+        )
+        self.output_entry.grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        
+        browse_output_btn = ctk.CTkButton(
+            output_frame,
+            text="Select",
+            command=self._browse_output_folder,
+            width=70,
+            height=35,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            corner_radius=6
+        )
+        browse_output_btn.grid(row=0, column=1, padx=(0, 6))
+        
+        reset_output_btn = ctk.CTkButton(
+            output_frame,
+            text="Reset",
+            command=self._reset_output_folder,
+            width=60,
+            height=35,
+            font=ctk.CTkFont(size=11),
+            fg_color=("gray70", "gray30"),
+            hover_color=("gray60", "gray35"),
+            corner_radius=6
+        )
+        reset_output_btn.grid(row=0, column=2)
+        
         # Stats & Preview Card - ULTRA COMPACT
         stats_card = ModernCard(scroll, title="Quick Stats")
         stats_card.pack(fill="x", pady=(8, 8))
@@ -1101,6 +1154,18 @@ License: MIT
             self.source_folder.set("")
             self._log(f"📄 File selected: {file}")
             
+    def _browse_output_folder(self):
+        """Browse for output folder"""
+        folder = filedialog.askdirectory(title="Select Output Folder")
+        if folder:
+            self.output_folder_var.set(folder)
+            self._log(f"📂 Output folder selected: {folder}")
+            
+    def _reset_output_folder(self):
+        """Reset output folder to default"""
+        self.output_folder_var.set("")
+        self._log("📂 Output folder reset to default (Same as source)")
+            
     def _log(self, message):
         """Add message to log"""
         if self.log_text:
@@ -1221,6 +1286,7 @@ License: MIT
             # Prepare settings
             source_folder = self.source_folder.get().strip()
             source_file = self.source_file.get().strip()
+            output_folder = self.output_folder_var.get().strip() or None
             
             # Prepare fine-tuning dictionary if enabled
             fine_tuning = None
@@ -1267,18 +1333,20 @@ License: MIT
             
             # Convert
             if source_folder:
-                output_folder, total, processed, errors = converter.convert_folder(
+                output_path, total, processed, errors = converter.convert_folder(
                     source_folder,
+                    output_folder=output_folder,
                     progress_callback=progress_callback
                 )
                 success = len(errors) == 0
                 if success:
-                    message = f"Successfully converted {processed}/{total} images to {output_folder}"
+                    message = f"Successfully converted {processed}/{total} images to {output_path}"
                 else:
-                    message = f"Converted {processed}/{total} images with {len(errors)} errors to {output_folder}"
+                    message = f"Converted {processed}/{total} images with {len(errors)} errors to {output_path}"
             else:
                 output_file, total, processed, errors = converter.convert_single_file(
                     source_file,
+                    output_folder=output_folder,
                     progress_callback=progress_callback
                 )
                 success = len(errors) == 0
